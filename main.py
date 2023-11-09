@@ -131,6 +131,7 @@ async def check_new_offers():
 
 async def main():
     logger.info("Starting bot...")
+    await on_startup(dp)
     await asyncio.gather(dp.start_polling(bot), check_new_offers())
 
 
