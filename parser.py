@@ -40,7 +40,7 @@ class Home:
     def beautified_info(self):
         return (
             f"📍 <a href='{self.url}'>{self.street_house}</a>\n"
-            f"     \t{self.postal_code_city}\n"
+            f"     \t{self.postal_code_city}\n\n"
             f"💰 {self.price}\n"
             f"🏠 {self.size}\n"
             f"🛏️ {self.bedrooms}\n"
@@ -52,14 +52,15 @@ class Home:
 
 class FundaParser:
     def __init__(self):
-        self.url = settings.funda_url
         self.driver: Driver = Driver(uc=True, headless=True)
         self.previous_homes: list[Home] = []
         self.latest_homes: list[Home] = []
+        self.settings = settings
 
     async def fetch_data(self, first_time=False):
         try:
-            self.driver.get(self.url)
+            logger.debug(f"Fetching data from {self.settings.funda_url}")
+            self.driver.get(self.settings.funda_url)
 
             # Increase the timeout if necessary
             WebDriverWait(self.driver, 10).until(
@@ -180,7 +181,10 @@ class FundaParser:
                 else:
                     logger.debug("No new homes found.")
 
-                await asyncio.sleep(10)
+                # Update the previous homes
+                self.previous_homes = self.latest_homes
+
+                await asyncio.sleep(2)
 
         except KeyboardInterrupt:
             logger.info("Stopping the script.")

@@ -1,6 +1,8 @@
 import json
 from asyncio import Queue
 
+from loguru import logger
+
 
 class Settings:
     def __init__(self):
@@ -15,11 +17,13 @@ class Settings:
     def load(self):
         with open("settings.json", "r") as f:
             _settings = json.load(f)
-        self._funda_url = _settings.get("funda_url") or self._funda_url
-        self._known_chats = _settings.get("known_chats") or self._known_chats
+        self._funda_url = _settings.get("_funda_url") or self._funda_url
+        self._known_chats = _settings.get("_known_chats") or self._known_chats
+        logger.debug(f"Loaded settings: {self.__dict__}")
 
     def save(self):
         with open("settings.json", "w") as f:
+            logger.debug(f"Saving settings: {self.__dict__}")
             json.dump(self.__dict__, f)
 
     @property
@@ -28,7 +32,9 @@ class Settings:
 
     @funda_url.setter
     def funda_url(self, value):
+        logger.info(f"New url set: {value}")
         self._funda_url: str = value
+        self.save()
 
     @funda_url.deleter
     def funda_url(self):
@@ -40,7 +46,9 @@ class Settings:
 
     @known_chats.setter
     def known_chats(self, value):
+        logger.info(f"New chat added: {value}")
         self._known_chats: list = value
+        self.save()
 
     @known_chats.deleter
     def known_chats(self):

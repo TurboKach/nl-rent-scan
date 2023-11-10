@@ -93,11 +93,16 @@ async def check_new_offers():
 
 
 async def check_and_send_new_messages():
-    message = await message_queue.get()
-    if message:
-        logger.info("Sending message...")
-        for chat_id in settings.known_chats:
-            await bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.HTML)
+    while True:
+        message = await message_queue.get()
+        if message:
+            logger.info("Sending message...")
+            for chat_id in settings.known_chats:
+                try:
+                    await bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.HTML)
+                    await asyncio.sleep(0.5)
+                except Exception as e:
+                    logger.error(e)
 
 
 async def main():
