@@ -11,7 +11,8 @@ class Settings:
             "?selected_area=%5B%22amsterdam,50km%22%5D&sort=%22date_down%22"
         )
         self._funda_url: str = self.funda_url_default
-        self._known_chats: list = []
+        self._known_chats: list[int] = []
+        self._admins_ids: list[int] = []
         self.load()
 
     def load(self):
@@ -19,6 +20,7 @@ class Settings:
             _settings = json.load(f)
         self._funda_url = _settings.get("_funda_url") or self._funda_url
         self._known_chats = _settings.get("_known_chats") or self._known_chats
+        self._admins_ids = _settings.get("_admins_ids") or self._admins_ids
         logger.debug(f"Loaded settings: {self.__dict__}")
 
     def save(self):
@@ -53,6 +55,27 @@ class Settings:
     @known_chats.deleter
     def known_chats(self):
         del self._known_chats
+
+    @property
+    def admins_ids(self):
+        return self._admins_ids
+
+    @admins_ids.setter
+    def admins_ids(self, value):
+        logger.info(f"New admin added: {value}")
+        self._admins_ids: list = value
+        self.save()
+
+    @admins_ids.deleter
+    def admins_ids(self):
+        del self._admins_ids
+
+    def __repr__(self):
+        return (
+            f"<Settings funda_url={self.funda_url}, "
+            f"known_chats={self.known_chats}, "
+            f"admins_ids={self.admins_ids}>"
+        )
 
 
 settings = Settings()

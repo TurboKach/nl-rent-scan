@@ -58,38 +58,46 @@ class FundaParser:
         self.settings = settings
 
     async def fetch_data(self, first_time=False):
-        try:
-            logger.debug(f"Fetching data from {self.settings.funda_url}")
-            self.driver.get(self.settings.funda_url)
+        data_fetched = False
+        while not data_fetched:
+            try:
+                logger.debug(f"Fetching data from {self.settings.funda_url}")
+                self.driver.get(self.settings.funda_url)
 
-            # Increase the timeout if necessary
-            WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, 'div[data-test-id="search-result-item"]'))
-            )
-
-            if first_time:
-                logger.info("Successfully fetched data for the first time.")
-                cookie_button = WebDriverWait(self.driver, 5).until(
-                    EC.element_to_be_clickable((By.ID, "didomi-notice-agree-button"))
+                # Increase the timeout if necessary
+                WebDriverWait(self.driver, 5).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, 'div[data-test-id="search-result-item"]'))
                 )
-                # Click the button
-                cookie_button.click()
-                logger.info("Clicked the cookie button.")
-                new_close_button = WebDriverWait(self.driver, 5).until(
-                    EC.element_to_be_clickable(
-                        (
-                            By.CSS_SELECTOR,
-                            "button[class='absolute right-4 top-3 flex h-11 w-11 items-center justify-center']"
+
+                if first_time:
+                    logger.info("Successfully fetched data for the first time.")
+                    cookie_button = WebDriverWait(self.driver, 5).until(
+                        EC.element_to_be_clickable((By.ID, "didomi-notice-agree-button"))
+                    )
+                    # Click the button
+                    cookie_button.click()
+                    logger.info("Clicked the cookie button.")
+                    new_close_button = WebDriverWait(self.driver, 5).until(
+                        EC.element_to_be_clickable(
+                            (
+                                By.CSS_SELECTOR,
+                                "button[class='absolute right-4 top-3 flex h-11 w-11 items-center justify-center']"
+                            )
                         )
                     )
-                )
-                new_close_button.click()
-                logger.info("Clicked the new close button.")
-        except TimeoutException:
-            logger.warning("Timed out waiting for page to load")
-            return None  # or handle it in some other way
-        except WebDriverException:
-            self.driver = Driver(uc=True, headless=True)
+                    new_close_button.click()
+                    logger.info("Clicked the new close button.")
+                data_fetched = True
+            except TimeoutException:
+                logger.warning("Timed out waiting for page to load")
+                return None  # or handle it in some other way
+            except WebDriverException:
+                logger.error("Webdriver exception")
+                # self.driver: Driver = Driver(uc=True, headless=True)
+            if self.driver.current_url != self.settings.funda_url:
+                self.settings.funda_url = self.settings.funda_url_default
+                logger.warning("Failed to fetch data, setting default url and trying again...")
+                return None
 
     async def extract_home_info(self):
         soup = BeautifulSoup(self.driver.page_source, 'html.parser')
@@ -184,7 +192,7 @@ class FundaParser:
                 # Update the previous homes
                 self.previous_homes = self.latest_homes
 
-                await asyncio.sleep(2)
+                await asyncio.sleep(5)
 
         except KeyboardInterrupt:
             logger.info("Stopping the script.")

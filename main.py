@@ -3,6 +3,7 @@ import json
 import os
 
 from aiogram.enums import ParseMode
+from aiogram.types import BotCommand
 from loguru import logger
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
@@ -21,18 +22,24 @@ logger.add(f"{__name__}.log", rotation="10 MB")  # Automatically rotate too big 
 bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN"))
 dp = Dispatcher()
 
-OWNER_ID = os.getenv("OWNER_ID")
+OWNER_ID = int(os.getenv("OWNER_ID"))
 
 
 async def on_startup(dp):
     logger.info("Starting connection...")
-    for chat_id in settings.known_chats:
+    bot_commands = [
+        BotCommand(command="/start", description="Help"),
+    ]
+    await bot.set_my_commands(bot_commands)
+    for chat_id in settings.admins_ids:
         await bot.send_message(chat_id=chat_id, text=f"Bot started! 🔌\n\nCurrent search URL: {settings.funda_url}")
 
 
-@dp.message(Command("start"))
+@dp.message(Command("start"), Command("help"))
 async def cmd_start(message: types.Message):
-    await new_chat_remember(message)
+    if message.from_user.id not in [OWNER_ID, *settings.admins_ids]:
+        await message.answer("You are not allowed to use this bot. Please contact bot owner.")
+        return
     text = (
         "Hello! 👋\n\n"
         "This bot is scanning Funda.nl for new rental offers "
@@ -45,9 +52,53 @@ async def cmd_start(message: types.Message):
     await message.answer(text)
 
 
-@dp.message(F.text)
+@dp.message(Command("add_admin"), F.from_user.id == OWNER_ID)
+async def add_admin(message: types.Message):
+    logger.debug(f"Adding admin: {message.text}")
+    try:
+        admin_to_add = int(message.text.split(' ', 1)[1])
+        if admin_to_add not in settings.admins_ids:
+            admin_ids = [*settings.admins_ids, admin_to_add]
+            settings.admins_ids = admin_ids
+            text = f"New admin added: {admin_to_add}"
+        else:
+            text = f"Admin already exists: {admin_to_add}"
+    except Exception as e:
+        logger.error(e)
+        text = f"Error adding new admin: {e}"
+    await message.answer(text)
+
+
+@dp.message(Command("remove_admin"), F.from_user.id == OWNER_ID)
+async def remove_admin(message: types.Message):
+    logger.debug(f"Removing admin: {message.text}")
+    try:
+        admin_to_remove = int(message.text.split(' ', 1)[1])
+        if admin_to_remove in settings.admins_ids:
+            admins_ids = [*settings.admins_ids].remove(admin_to_remove)
+            settings.admins_ids = admins_ids
+            text = f"Admin removed: {admin_to_remove}"
+        else:
+            text = f"Admin doesn't exist: {admin_to_remove}"
+    except Exception as e:
+        logger.error(e)
+        text = f"Error removing admin: {e}"
+    await message.answer(text)
+
+
+@dp.message(Command("get_admins"), F.from_user.id == OWNER_ID)
+async def get_admins(message: types.Message):
+    logger.debug(f"Getting admins: {settings.admins_ids}")
+    try:
+        text = f"Admins: {settings.admins_ids}"
+    except Exception as e:
+        logger.error(e)
+        text = f"Error getting admins: {e}"
+    await message.answer(text)
+
+
+@dp.message(F.text, F.from_user.id.in_([OWNER_ID, *settings.admins_ids]))
 async def new_url_set(message: types.Message):
-    await new_chat_remember(message)
     try:
         settings.funda_url = message.text
         text = f"New url set: {settings.funda_url}"
@@ -55,24 +106,6 @@ async def new_url_set(message: types.Message):
         logger.error(e)
         text = f"Error setting new url: {e}"
     await message.answer(text)
-
-
-async def new_chat_remember(message: types.Message):
-    try:
-        if message.chat.id not in settings.known_chats:
-            # TODO check if append is good here.
-            #  Maybe it's better to set new list because of @property setter
-            #  like this: settings.known_chats = settings.known_chats.append(message.chat.id)
-            settings.known_chats.append(message.chat.id)
-            log_msg = (
-                f"New chat added: "
-                f"@{message.from_user.username}, {message.chat.title or message.from_user.username} ({message.chat.id})"
-            )
-            logger.info(log_msg)
-            await bot.send_message(chat_id=OWNER_ID, text=log_msg)
-    except Exception as e:
-        logger.error(e)
-        await message.answer(repr(e))
 
 
 async def check_new_offers():
@@ -97,7 +130,7 @@ async def check_and_send_new_messages():
         message = await message_queue.get()
         if message:
             logger.info("Sending message...")
-            for chat_id in settings.known_chats:
+            for chat_id in settings.admins_ids:
                 try:
                     await bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.HTML)
                     await asyncio.sleep(0.5)
