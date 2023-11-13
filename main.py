@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-from aiogram.enums import ParseMode
+from aiogram.enums import ParseMode, ChatType
 from aiogram.types import BotCommand
 from loguru import logger
 from aiogram import Bot, Dispatcher, types
@@ -97,7 +97,7 @@ async def get_admins(message: types.Message):
     await message.answer(text)
 
 
-@dp.message(F.text, F.from_user.id.in_([OWNER_ID, *settings.admins_ids]))
+@dp.message(F.text, F.chat.type == ChatType.PRIVATE, F.from_user.id.in_([OWNER_ID, *settings.admins_ids]))
 async def new_url_set(message: types.Message):
     try:
         settings.funda_url = message.text.strip()
