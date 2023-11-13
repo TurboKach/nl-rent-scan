@@ -93,11 +93,14 @@ class FundaParser:
                 return None  # or handle it in some other way
             except WebDriverException:
                 logger.error("Webdriver exception")
-                # self.driver: Driver = Driver(uc=True, headless=True)
-            if self.driver.current_url != self.settings.funda_url:
-                self.settings.funda_url = self.settings.funda_url_default
-                logger.warning("Failed to fetch data, setting default url and trying again...")
+                if self.driver.current_url != self.settings.funda_url:
+                    self.settings.funda_url = self.settings.funda_url_default
                 return None
+                # self.driver: Driver = Driver(uc=True, headless=True)
+            # if self.driver.current_url != self.settings.funda_url:
+            #     self.settings.funda_url = self.settings.funda_url_default
+            #     logger.warning("Failed to fetch data, setting default url and trying again...")
+            #     return None
 
     async def extract_home_info(self):
         soup = BeautifulSoup(self.driver.page_source, 'html.parser')
@@ -181,18 +184,18 @@ class FundaParser:
                 new_homes = await self.check_new_homes()
 
                 if new_homes:
-                    logger.info("New homes found")
+                    logger.info(f" {len(new_homes)} new homes found")
                     logger.debug(f"New data: \n{new_homes}")
                     for home in new_homes:
                         logger.debug(f"Adding new home {home.url} to queue...")
                         await message_queue.put(home.beautified_info)
                 else:
-                    logger.debug("No new homes found.")
+                    logger.debug(f"No new homes found. {len(self.latest_homes)} homes found.")
 
                 # Update the previous homes
                 self.previous_homes = self.latest_homes
 
-                await asyncio.sleep(5)
+                await asyncio.sleep(10)
 
         except KeyboardInterrupt:
             logger.info("Stopping the script.")

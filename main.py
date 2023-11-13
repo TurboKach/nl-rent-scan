@@ -1,5 +1,4 @@
 import asyncio
-import json
 import os
 
 from aiogram.enums import ParseMode
@@ -26,6 +25,7 @@ OWNER_ID = int(os.getenv("OWNER_ID"))
 
 
 async def on_startup(dp):
+    await bot.delete_webhook(drop_pending_updates=True)
     logger.info("Starting connection...")
     bot_commands = [
         BotCommand(command="/start", description="Help"),
@@ -100,7 +100,7 @@ async def get_admins(message: types.Message):
 @dp.message(F.text, F.from_user.id.in_([OWNER_ID, *settings.admins_ids]))
 async def new_url_set(message: types.Message):
     try:
-        settings.funda_url = message.text
+        settings.funda_url = message.text.strip()
         text = f"New url set: {settings.funda_url}"
     except Exception as e:
         logger.error(e)
@@ -130,10 +130,10 @@ async def check_and_send_new_messages():
         message = await message_queue.get()
         if message:
             logger.info("Sending message...")
-            for chat_id in settings.admins_ids:
+            for chat_id in settings.known_chats:
                 try:
                     await bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.HTML)
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(1)
                 except Exception as e:
                     logger.error(e)
 
