@@ -181,7 +181,7 @@ class FundaParser:
                     logger.warning("Failed to fetch new data, trying again...")
                     continue
                 extracted_homes = await self.extract_home_info()
-                if extracted_homes is None:
+                if not extracted_homes:
                     logger.warning("Failed to extract new data, trying again...")
                     continue
                 self.latest_homes = extracted_homes

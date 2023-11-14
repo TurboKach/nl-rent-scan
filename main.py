@@ -35,7 +35,7 @@ async def on_startup(dp):
         await bot.send_message(chat_id=chat_id, text=f"Bot started! 🔌\n\nCurrent search URL: {settings.funda_url}")
 
 
-@dp.message(Command("start"), Command("help"))
+@dp.message(Command("start"), Command("help"), F.chat.type == ChatType.PRIVATE)
 async def cmd_start(message: types.Message):
     if message.from_user.id not in [OWNER_ID, *settings.admins_ids]:
         await message.answer("You are not allowed to use this bot. Please contact bot owner.")
