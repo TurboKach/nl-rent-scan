@@ -114,7 +114,7 @@ async def check_new_offers():
     :return:
     """
     logger.info("Checking for new offers...")
-    try:`
+    try:
         await parser.scan_funda()
     except InvalidArgumentException:
         logger.error("Invalid URL! Default URL will be used.\n"
