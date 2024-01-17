@@ -86,6 +86,51 @@ async def remove_admin(message: types.Message):
     await message.answer(text)
 
 
+@dp.message(Command("add_chat"), F.from_user.id == OWNER_ID)
+async def add_chat(message: types.Message):
+    logger.debug(f"Adding chat: {message.text}")
+    try:
+        chat_to_add = int(message.text.split(' ', 1)[1])
+        if chat_to_add not in settings.known_chats:
+            known_chats = [*settings.known_chats, chat_to_add]
+            settings.known_chats = known_chats
+            text = f"New chat added: {chat_to_add}"
+        else:
+            text = f"Chat already exists: {chat_to_add}"
+    except Exception as e:
+        logger.error(e)
+        text = f"Error adding new chat: {e}"
+    await message.answer(text)
+
+
+@dp.message(Command("remove_chat"), F.from_user.id == OWNER_ID)
+async def remove_chat(message: types.Message):
+    logger.debug(f"Removing chat: {message.text}")
+    try:
+        chat_to_remove = int(message.text.split(' ', 1)[1])
+        if chat_to_remove in settings.known_chats:
+            known_chats = [*settings.admins_ids].remove(chat_to_remove)
+            settings.known_chats = known_chats
+            text = f"Chat removed: {chat_to_remove}"
+        else:
+            text = f"Admin doesn't exist: {chat_to_remove}"
+    except Exception as e:
+        logger.error(e)
+        text = f"Error removing admin: {e}"
+    await message.answer(text)
+
+
+@dp.message(Command("get_chats"), F.from_user.id == OWNER_ID)
+async def get_chats(message: types.Message):
+    logger.debug(f"Getting chats: {settings.known_chats}")
+    try:
+        text = f"Chats: {settings.known_chats}"
+    except Exception as e:
+        logger.error(e)
+        text = f"Error getting chats: {e}"
+    await message.answer(text)
+
+
 @dp.message(Command("get_admins"), F.from_user.id == OWNER_ID)
 async def get_admins(message: types.Message):
     logger.debug(f"Getting admins: {settings.admins_ids}")
@@ -94,6 +139,18 @@ async def get_admins(message: types.Message):
     except Exception as e:
         logger.error(e)
         text = f"Error getting admins: {e}"
+    await message.answer(text)
+
+
+@dp.message(Command("get_chat_id"), F.from_user.id == OWNER_ID)
+async def get_chat_id(message: types.Message):
+    chat_id = message.chat.id or message.from_user.id
+    logger.debug(f"Getting chat id: {chat_id}")
+    try:
+        text = f"Chat id: {chat_id}"
+    except Exception as e:
+        logger.error(e)
+        text = f"Error getting chat id: {e}"
     await message.answer(text)
 
 
