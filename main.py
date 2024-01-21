@@ -172,6 +172,7 @@ async def check_new_offers():
     """
     logger.info("Checking for new offers...")
     try:
+        await parser.get_google()
         await parser.scan_funda()
     except InvalidArgumentException:
         logger.error("Invalid URL! Default URL will be used.\n"

@@ -63,7 +63,7 @@ class FundaParser:
         data_fetched = False
         while not data_fetched:
             try:
-                logger.debug(f"Fetching data from {self.settings.funda_url}")
+                logger.debug(f"Fetching data from {self.settings.funda_url}. Timeout: {WEBDRIVER_WAIT_TIMEOUT} sec")
                 self.driver.get(self.settings.funda_url)
 
                 # Increase the timeout if necessary
@@ -73,13 +73,15 @@ class FundaParser:
 
                 if first_time:
                     logger.info("Successfully fetched data for the first time.")
-                    cookie_button = WebDriverWait(self.driver, 5).until(
+                    logger.info("Waiting for the cookie button...")
+                    cookie_button = WebDriverWait(self.driver, WEBDRIVER_WAIT_TIMEOUT).until(
                         EC.element_to_be_clickable((By.ID, "didomi-notice-agree-button"))
                     )
                     # Click the button
                     cookie_button.click()
                     logger.info("Clicked the cookie button.")
-                    new_close_button = WebDriverWait(self.driver, 5).until(
+                    logger.info("Waiting for the new close button...")
+                    new_close_button = WebDriverWait(self.driver, WEBDRIVER_WAIT_TIMEOUT).until(
                         EC.element_to_be_clickable(
                             (
                                 By.CSS_SELECTOR,
@@ -163,6 +165,11 @@ class FundaParser:
     async def check_new_homes(self):
         old_homes_urls = [home.url for home in self.previous_homes]
         return [home for home in self.latest_homes if home.url not in old_homes_urls]
+
+    async def get_google(self):
+        logger.info("Getting Google...")
+        self.driver.get("https://www.google.com/")
+        logger.info("Got Google.")
 
     async def scan_funda(self):
 
