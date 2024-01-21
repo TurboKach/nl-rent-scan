@@ -11,6 +11,8 @@ from loguru import logger
 from settings import message_queue, settings
 
 
+WEBDRIVER_WAIT_TIMEOUT = 10
+
 class Home:
     def __init__(self, **kwargs):
         self.url = kwargs.get('url')
@@ -65,7 +67,7 @@ class FundaParser:
                 self.driver.get(self.settings.funda_url)
 
                 # Increase the timeout if necessary
-                WebDriverWait(self.driver, 5).until(
+                WebDriverWait(self.driver, WEBDRIVER_WAIT_TIMEOUT).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, 'div[data-test-id="search-result-item"]'))
                 )
 
