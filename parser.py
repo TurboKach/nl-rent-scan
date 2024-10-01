@@ -1,4 +1,5 @@
 import asyncio
+import platform
 
 from bs4 import BeautifulSoup
 from seleniumbase import Driver
@@ -50,7 +51,15 @@ class Home:
 
 class FundaParser:
     def __init__(self):
-        self.driver: Driver = Driver(uc=True, headless=True)
+        # Check if the platform is Ubuntu
+        chrome_path = "/usr/bin/google-chrome-stable" if platform.system() == "Linux" else None
+
+        # Initialize the Driver with the correct Chrome binary location if needed
+        self.driver: Driver = Driver(
+            uc=True,
+            headless=True,
+            binary_location=chrome_path  # Pass custom Chrome path if on Ubuntu
+        )
         self.previous_homes: list[Home] = []
         self.latest_homes: list[Home] = []
         self.settings = settings

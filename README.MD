@@ -22,7 +22,7 @@ OWNER_ID=your-telegram-user-id
 
 ### Install Dependencies
 
-Install required Python libraries:
+Install the required Python libraries:
 
 ```bash
 pip install -r requirements.txt
@@ -40,7 +40,7 @@ python-dotenv
 
 ## Setup Instructions
 
-1. **Clone the Repo**:
+1. **Clone the Repository**:
 
    ```bash
    git clone https://github.com/TurboKach/nl-rent-scan.git
@@ -48,6 +48,8 @@ python-dotenv
    ```
 
 2. **Create a `.env` File**:
+
+   Inside the root directory, create a `.env` file with the following content:
 
    ```bash
    TELEGRAM_BOT_TOKEN=your-telegram-bot-token
@@ -64,8 +66,8 @@ python-dotenv
 
 To deploy this bot on a remote server using Docker:
 
-1. Ensure the `Dockerfile` is present in the project (already committed).
-   
+1. Ensure the `Dockerfile` is present in the project.
+
 2. **Build the Docker image**:
 
    ```bash
@@ -74,24 +76,63 @@ To deploy this bot on a remote server using Docker:
 
 3. **Run the Docker container** locally or on your remote server:
 
-   - Locally:
+   - **Locally**:
+
      ```bash
      docker run --env-file .env funda_parser_bot
      ```
 
-   - On a remote server:
+   - **On a remote server**:
      1. Copy your project to the remote server.
-     2. Build the Docker image or pull it from a registry.
-     3. Run the container with your `.env` file.
+     2. Build the Docker image or pull it from a Docker registry.
+     3. Run the container using the `.env` file:
 
-The bot will now run inside the Docker container, monitoring Funda.nl for new offers and notifying the specified chats.
+     ```bash
+     docker run --env-file .env funda_parser_bot
+     ```
+
+## Setting Up Chrome on a Remote Server
+
+The bot uses Selenium to automate Chrome for web scraping. If you're running the bot on a remote server, you'll need to install Google Chrome and ChromeDriver.
+
+### 1. Install Google Chrome
+
+To install Google Chrome on a remote server (e.g., Ubuntu):
+
+```bash
+# Update the package lists
+sudo apt update
+
+# Install necessary dependencies
+sudo apt install -y wget gnupg2 software-properties-common
+
+# Download Google's signing key and add it to the system
+wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+
+# Set up the stable repository for Chrome
+echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+
+# Update the package lists and install Google Chrome
+sudo apt update
+sudo apt install -y google-chrome-stable
+```
+
+### 2. Verify Chrome Installation
+
+You can verify both installations with:
+
+```bash
+google-chrome --version  # Should return the installed Chrome version
+```
+
+Now, your server is ready to run the bot using Selenium with Chrome.
 
 ## Key Commands
 
 - `/start` or `/help`: Shows basic instructions.
 - `/add_admin [user_id]`, `/remove_admin [user_id]`: Manage admins (owner only).
 - `/add_chat [chat_id]`, `/remove_chat [chat_id]`: Manage chats (owner only).
-- `/get_admins`, `/get_chats`, `/get_chat_id`: Retrieve current admins or chats.
+- `/get_admins`, `/get_chats`, `/get_chat_id`: Retrieve the current admins or chats.
 
 ## Monitoring Funda.nl
 
