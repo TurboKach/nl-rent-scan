@@ -3,8 +3,8 @@
 set -e  # Exit immediately if a command exits with a non-zero status
 
 # Update package lists
-echo "Updating package lists..."
-apt-get update
+#echo "Updating package lists..."
+#apt-get update
 
 # Install dependencies for Chrome
 echo "Installing dependencies..."
