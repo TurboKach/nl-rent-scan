@@ -1,5 +1,6 @@
 import asyncio
 import os
+import traceback
 
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ParseMode, ChatType
@@ -9,11 +10,14 @@ from dotenv import load_dotenv
 from loguru import logger
 from selenium.common.exceptions import InvalidArgumentException
 
-from parser import parser
+from parser import FundaParser
 from settings import settings, message_queue
 
 # Load environment variables
 load_dotenv()
+
+OWNER_ID = int(os.getenv("OWNER_ID"))
+MAX_MESSAGE_LENGTH = 4092
 
 # Set up logging
 logger.add(f"{__name__}.log", rotation="10 MB")  # Automatically rotate large log files
@@ -22,7 +26,31 @@ logger.add(f"{__name__}.log", rotation="10 MB")  # Automatically rotate large lo
 bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN"))
 dp = Dispatcher(storage=None)  # No persistence for storage
 
-OWNER_ID = int(os.getenv("OWNER_ID"))
+# Initialize the parser instance
+parser = FundaParser()
+
+
+async def send_critical_error_message(error_msg):
+    """
+    Sends a simplified critical error message to the bot owner on Telegram.
+    """
+    try:
+        # Compose the error message to be sent (only using the exception type and message)
+        message = (
+            f"⚠️ Critical Error:\n\n"
+            f"Exception: {type(error_msg).__name__}\n"
+            f"Message: {str(error_msg)}"
+        )
+
+        # Ensure the message is within Telegram's character limit
+        if len(message) > MAX_MESSAGE_LENGTH:
+            message = message[:MAX_MESSAGE_LENGTH] + '...'  # Truncate if too long
+
+        # Send the simplified message to the bot owner
+        await bot.send_message(OWNER_ID, message)
+    except Exception as e:
+        logger.error(f"Failed to send critical error message: {e}")
+
 
 
 async def add_admin_by_user_id(user_id: int) -> str:
@@ -226,9 +254,16 @@ async def check_and_send_new_messages():
 
 
 async def main():
-    logger.info("Starting bot...")
-    await on_startup()
-    await asyncio.gather(dp.start_polling(bot), check_new_offers(), check_and_send_new_messages())
+    try:
+        logger.info("Starting bot...")
+        await on_startup()
+        await asyncio.gather(dp.start_polling(bot), check_new_offers(), check_and_send_new_messages())
+    except Exception as e:
+        error_msg = f"{type(e).__name__}: {e}"
+        logger.critical(f"Bot crashed: {error_msg}")
+        await send_critical_error_message(error_msg)
+    finally:
+        await bot.session.close()
 
 
 if __name__ == "__main__":

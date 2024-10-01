@@ -214,7 +214,3 @@ class FundaParser:
             logger.info("Stopping the script.")
         finally:
             self.driver.quit()
-
-
-# Initialize the parser instance
-parser = FundaParser()
