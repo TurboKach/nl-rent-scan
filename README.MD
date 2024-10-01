@@ -1,140 +1,103 @@
 # Funda Rental Offers Telegram Bot
 
-This is a Telegram bot built using `aiogram v3` that monitors rental offers from Funda.nl and notifies admins and specified chats of new listings based on a custom URL. The bot also provides admin controls to manage which users and chats receive these notifications.
+A Telegram bot built using `aiogram` that monitors rental offers from Funda.nl and notifies admins and chats of new listings based on a custom URL. The bot includes admin controls for managing who receives notifications.
 
 ## Features
 
-- Fetch rental offers from Funda.nl based on a URL provided by users.
-- Notify specified users and chats of new offers.
-- Admin management (add and remove admins, add and remove chats).
-- Easy-to-use `/start` and `/help` commands for user guidance.
+- Fetches rental offers from Funda.nl based on a provided URL.
+- Notifies users and chats of new offers.
+- Admin commands to manage users and chats.
+- Simple `/start` and `/help` commands.
 
 ## Prerequisites
 
-Before running the bot, ensure you have the following:
-
-- Python 3.8 or higher installed.
-- A [Telegram Bot Token](https://core.telegram.org/bots#botfather).
-- `aiogram v3`, `loguru`, and `selenium` Python libraries installed.
-- `.env` file set up with the following variables:
+- Python 3.8+
+- A [Telegram Bot Token](https://core.telegram.org/bots#botfather)
+- `.env` file with:
 
 ```bash
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token-here
-OWNER_ID=your-telegram-user-id-here
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+OWNER_ID=your-telegram-user-id
 ```
 
-The `.env` file is used to keep sensitive information like the bot token and owner ID.
+### Install Dependencies
 
-### Python Libraries
-
-Install the required Python libraries using:
+Install required Python libraries:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Your `requirements.txt` should include the following dependencies:
+Example `requirements.txt`:
 
 ```text
-aiogram==3.x.x
+aiogram
 loguru
-selenium
+seleniumbase
+beautifulsoup4
 python-dotenv
 ```
 
-### Setup Instructions
+## Setup Instructions
 
-1. **Clone the Repository**:
+1. **Clone the Repo**:
+
    ```bash
    git clone https://github.com/TurboKach/nl-rent-scan.git
    cd nl-rent-scan
    ```
 
-2. **Create a `.env` file**:
-   Inside the root directory of the project, create a `.env` file with the following content:
+2. **Create a `.env` File**:
 
    ```bash
    TELEGRAM_BOT_TOKEN=your-telegram-bot-token
    OWNER_ID=your-telegram-user-id
    ```
 
-3. **Configure the `settings.py` file**:
-   You will need to configure the `settings.py` file to include variables like `admins_ids`, `funda_url`, `funda_url_default`, `known_chats`, etc.
-
-   Example `settings.py`:
-
-   ```python
-   class Settings:
-       admins_ids = [123456789, 987654321]  # List of admin user IDs
-       funda_url = "https://www.funda.nl/huur/amsterdam/"
-       funda_url_default = "https://www.funda.nl/huur/"
-       known_chats = []  # List of known chat IDs
-
-   settings = Settings()
-   ```
-
-4. **Run the Bot**:
-   To run the bot, execute the following command:
+3. **Run the Bot**:
 
    ```bash
    python bot.py
    ```
 
-   If everything is set up correctly, you should see logs indicating that the bot has started.
+## Running the Bot on a Remote Server with Docker
 
-## How It Works
+To deploy this bot on a remote server using Docker:
 
-### Basic Commands
+1. Ensure the `Dockerfile` is present in the project (already committed).
+   
+2. **Build the Docker image**:
 
-- `/start` or `/help`: Shows basic information and instructions for using the bot. Only the bot owner and admins can interact with the bot.
-  
-- **Admin Management**:
-  - `/add_admin [user_id]`: Adds a user to the list of admins. Only the bot owner can execute this command.
-  - `/remove_admin [user_id]`: Removes a user from the list of admins. Only the bot owner can execute this command.
-  
-- **Chat Management**:
-  - `/add_chat [chat_id]`: Adds a chat where notifications will be sent.
-  - `/remove_chat [chat_id]`: Removes a chat from the list of known chats.
-  - `/get_chats`: Retrieves a list of known chats.
-  
-- **Other Commands**:
-  - `/get_admins`: Retrieves a list of current admins.
-  - `/get_chat_id`: Retrieves the ID of the current chat.
+   ```bash
+   docker build -t funda_parser_bot .
+   ```
 
-### Adding Admins
+3. **Run the Docker container** locally or on your remote server:
 
-Admins can be added dynamically using the `/add_admin` command. Admins will have permission to interact with the bot and manage chat IDs.
+   - Locally:
+     ```bash
+     docker run --env-file .env funda_parser_bot
+     ```
 
-You can also add an admin programmatically using the `add_admin_by_user_id` function:
+   - On a remote server:
+     1. Copy your project to the remote server.
+     2. Build the Docker image or pull it from a registry.
+     3. Run the container with your `.env` file.
 
-```python
-result = await add_admin_by_user_id(123456789)  # Replace with the actual user_id
-```
+The bot will now run inside the Docker container, monitoring Funda.nl for new offers and notifying the specified chats.
 
-### Monitoring Funda.nl
+## Key Commands
 
-Once the bot is running, it continuously monitors the specified Funda.nl URL (`settings.funda_url`) for new rental listings. If a new offer is found, it sends the offer details to all known chats.
+- `/start` or `/help`: Shows basic instructions.
+- `/add_admin [user_id]`, `/remove_admin [user_id]`: Manage admins (owner only).
+- `/add_chat [chat_id]`, `/remove_chat [chat_id]`: Manage chats (owner only).
+- `/get_admins`, `/get_chats`, `/get_chat_id`: Retrieve current admins or chats.
 
-The `check_new_offers` function is used to scan for new offers:
+## Monitoring Funda.nl
 
-```python
-async def check_new_offers():
-    # Logic to scan Funda.nl for new offers
-    ...
-```
+The bot monitors a Funda.nl URL for new rental listings and notifies all specified chats when new offers are found.
 
-New messages are sent to all known chats using the `check_and_send_new_messages` function, which is continuously running in the background.
+## Logging and Error Handling
 
-## Logging
-
-The bot uses the `loguru` library for logging. Logs are saved in a rotating file (`bot.log`) with a maximum size of 10 MB.
-
-## Error Handling
-
-- If the bot encounters any issues while adding admins, managing chats, or scanning for offers, it logs the error using `logger.error`.
-- Invalid URLs are caught using Selenium’s `InvalidArgumentException`, and the bot reverts to the default Funda.nl URL.
-
-## Known Issues
-
-- Ensure that Selenium and the web driver are correctly configured for scraping.
-- If the bot stops responding, check the logs for error details.
+- Uses `loguru` for logging. Logs are saved in a rotating file (`bot.log`).
+- Handles invalid URLs and other Selenium exceptions, reverting to a default Funda.nl URL if needed.
