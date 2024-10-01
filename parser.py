@@ -10,8 +10,8 @@ from loguru import logger
 
 from settings import message_queue, settings
 
-
 WEBDRIVER_WAIT_TIMEOUT = 10
+
 
 class Home:
     def __init__(self, **kwargs):
@@ -75,11 +75,14 @@ class FundaParser:
                     logger.info("Successfully fetched data for the first time.")
                     logger.info("Waiting for the cookie button...")
                     cookie_button = WebDriverWait(self.driver, WEBDRIVER_WAIT_TIMEOUT).until(
-                        EC.element_to_be_clickable((By.ID, "didomi-notice-agree-button"))
+                        EC.element_to_be_clickable((By.ID, "didomi-notice-agree-button"))  # TODO disagree cookie
                     )
                     # Click the button
                     cookie_button.click()
                     logger.info("Clicked the cookie button.")
+                    # TODO here we need to check google captcha and notify if its there for manual solve.
+                    #  Je bent bijna op de pagina die je zoekt
+                    #  <h1 class="fd-h1 fd-m-none">Je bent bijna op de pagina die je zoekt</h1>
                     logger.info("Waiting for the new close button...")
                     new_close_button = WebDriverWait(self.driver, WEBDRIVER_WAIT_TIMEOUT).until(
                         EC.element_to_be_clickable(

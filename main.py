@@ -5,7 +5,7 @@ from aiogram.enums import ParseMode, ChatType
 from aiogram.types import BotCommand
 from loguru import logger
 from aiogram import Bot, Dispatcher, types
-from aiogram.filters.command import Command
+from aiogram.filters import Command
 from dotenv import load_dotenv
 from aiogram import F
 from selenium.common.exceptions import InvalidArgumentException
@@ -19,35 +19,59 @@ logger.add(f"{__name__}.log", rotation="10 MB")  # Automatically rotate too big 
 
 # Bot init
 bot = Bot(token=os.getenv("TELEGRAM_BOT_TOKEN"))
-dp = Dispatcher()
+dp = Dispatcher(storage=None)  # `storage=None` for no persistence
 
 OWNER_ID = int(os.getenv("OWNER_ID"))
 
 
-async def on_startup(dp):
+async def add_admin_by_user_id(user_id: int) -> str:
+    """
+    Function to add a new admin by user_id.
+    :param user_id: The user ID of the admin to add.
+    :return: A message indicating the result of the operation.
+    """
+    try:
+        if user_id not in settings.admins_ids:
+            settings.admins_ids.append(user_id)
+            text = f"New admin added: {user_id}"
+        else:
+            text = f"Admin already exists: {user_id}"
+    except Exception as e:
+        logger.error(f"Error adding new admin: {e}")
+        text = f"Error adding new admin: {e}"
+
+    return text
+
+
+async def on_startup():
     await bot.delete_webhook(drop_pending_updates=True)
     logger.info("Starting connection...")
     bot_commands = [
         BotCommand(command="/start", description="Help"),
     ]
     await bot.set_my_commands(bot_commands)
+    if OWNER_ID not in settings.admins_ids:
+        await add_admin_by_user_id(OWNER_ID)
     for chat_id in settings.admins_ids:
-        await bot.send_message(chat_id=chat_id, text=f"Bot started! 🔌\n\nCurrent search URL: {settings.funda_url}")
+        try:
+            await bot.send_message(chat_id=chat_id, text=f"Bot started! 🔌\n\nCurrent search URL: {settings.funda_url}")
+        except Exception as e:
+            logger.error(f"Failed to send startup message to {chat_id}: {e}")
 
 
-@dp.message(Command("start"), Command("help"), F.chat.type == ChatType.PRIVATE)
+@dp.message(Command(commands=["start", "help"]))
 async def cmd_start(message: types.Message):
     if message.from_user.id not in [OWNER_ID, *settings.admins_ids]:
-        await message.answer("You are not allowed to use this bot. Please contact bot owner.")
+        await message.answer("You are not allowed to use this bot. Please contact the bot owner.")
         return
     text = (
         "Hello! 👋\n\n"
         "This bot is scanning Funda.nl for new rental offers "
         "according to search parameters you set by url in your browser.\n\n"
         "To make this bot notify you about new offers, "
-        "set up your search parameters in your browser then copy url and send it to this bot.\n\n"
-        f"\nCurrent search URL: {settings.funda_url}\n\n"
-        "You can change it by sending new url to this bot.\n"
+        "set up your search parameters in your browser then copy the URL and send it to this bot.\n\n"
+        f"\nCurrent search URL:\n{settings.funda_url}\n\n"
+        "You can change it by sending a new URL to this bot.\n"
     )
     await message.answer(text)
 
@@ -57,16 +81,12 @@ async def add_admin(message: types.Message):
     logger.debug(f"Adding admin: {message.text}")
     try:
         admin_to_add = int(message.text.split(' ', 1)[1])
-        if admin_to_add not in settings.admins_ids:
-            admin_ids = [*settings.admins_ids, admin_to_add]
-            settings.admins_ids = admin_ids
-            text = f"New admin added: {admin_to_add}"
-        else:
-            text = f"Admin already exists: {admin_to_add}"
+        result = await add_admin_by_user_id(admin_to_add)
     except Exception as e:
         logger.error(e)
-        text = f"Error adding new admin: {e}"
-    await message.answer(text)
+        result = f"Error adding new admin: {e}"
+
+    await message.answer(result)
 
 
 @dp.message(Command("remove_admin"), F.from_user.id == OWNER_ID)
@@ -158,16 +178,18 @@ async def get_chat_id(message: types.Message):
 async def new_url_set(message: types.Message):
     try:
         settings.funda_url = message.text.strip()
-        text = f"New url set: {settings.funda_url}"
+        text = f"New url set:\n{settings.funda_url}"
     except Exception as e:
         logger.error(e)
         text = f"Error setting new url: {e}"
     await message.answer(text)
+    for chat in settings.known_chats:
+        await bot.send_message(chat_id=chat, text=text)
 
 
 async def check_new_offers():
     """
-    Checks for new offers and sends them to group or chat where bot is added.
+    Checks for new offers and sends them to the group or chat where bot is added.
     :return:
     """
     logger.info("Checking for new offers...")
@@ -178,9 +200,6 @@ async def check_new_offers():
         logger.error("Invalid URL! Default URL will be used.\n"
                      f"{settings.funda_url_default}")
         settings.funda_url = settings.funda_url_default
-    # except Exception:
-    #     logger.error("Trying again...")
-    #     # continue
 
 
 async def check_and_send_new_messages():
@@ -198,7 +217,7 @@ async def check_and_send_new_messages():
 
 async def main():
     logger.info("Starting bot...")
-    await on_startup(dp)
+    await on_startup()
     await asyncio.gather(dp.start_polling(bot), check_new_offers(), check_and_send_new_messages())
 
 
