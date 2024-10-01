@@ -13,8 +13,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the current directory contents into the container
 COPY . .
 
-# Set environment variables (if any) through Docker CLI or docker-compose.yml
-# Example: ENV TELEGRAM_BOT_TOKEN=<your-token>
+# Copy the entrypoint.sh into the container
+COPY entrypoint.sh /usr/src/app/entrypoint.sh
+
+# Make entrypoint.sh executable
+RUN chmod +x /usr/src/app/entrypoint.sh
+
+# Set the entrypoint
+ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
 
 # Command to run your app
 CMD ["python", "main.py"]

@@ -1,4 +1,5 @@
 import asyncio
+import os
 import platform
 
 from bs4 import BeautifulSoup
@@ -51,14 +52,22 @@ class Home:
 
 class FundaParser:
     def __init__(self):
-        # Check if the platform is Ubuntu
-        chrome_path = "/usr/bin/google-chrome-stable" if platform.system() == "Linux" else None
+        # Check if the platform is Linux (for Ubuntu or similar systems)
+        if platform.system() == "Linux":
+            # Check if Chrome exists at the expected path
+            chrome_path = "/usr/bin/google-chrome-stable"
+            if not os.path.exists(chrome_path):
+                chrome_path = "/usr/bin/google-chrome"  # Default location
+                if not os.path.exists(chrome_path):
+                    raise Exception("Chrome not found at the expected locations.")
+        else:
+            chrome_path = None  # On other systems, rely on the default binary location
 
-        # Initialize the Driver with the correct Chrome binary location if needed
+        # Initialize the Driver with the correct Chrome binary location
         self.driver: Driver = Driver(
             uc=True,
             headless=True,
-            binary_location=chrome_path  # Pass custom Chrome path if on Ubuntu
+            binary_location=chrome_path  # Pass the Chrome path if found
         )
         self.previous_homes: list[Home] = []
         self.latest_homes: list[Home] = []

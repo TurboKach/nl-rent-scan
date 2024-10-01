@@ -1,6 +1,5 @@
 import asyncio
 import os
-import traceback
 
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ParseMode, ChatType
@@ -50,7 +49,6 @@ async def send_critical_error_message(error_msg):
         await bot.send_message(OWNER_ID, message)
     except Exception as e:
         logger.error(f"Failed to send critical error message: {e}")
-
 
 
 async def add_admin_by_user_id(user_id: int) -> str:

@@ -71,7 +71,7 @@ To deploy this bot on a remote server using Docker:
 2. **Build the Docker image**:
 
    ```bash
-   docker build -t funda_parser_bot .
+   docker build --no-cache -t funda_parser_bot .
    ```
 
 3. **Run the Docker container** locally or on your remote server:
@@ -117,12 +117,31 @@ sudo apt update
 sudo apt install -y google-chrome-stable
 ```
 
-### 2. Verify Chrome Installation
+### 2. Install ChromeDriver
+
+To install ChromeDriver:
+
+```bash
+# Download the latest ChromeDriver version that matches your Chrome version
+wget https://chromedriver.storage.googleapis.com/$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
+
+sudo apt install unzip
+
+# Unzip the ChromeDriver
+unzip chromedriver_linux64.zip
+
+# Move ChromeDriver to /usr/local/bin for global access
+sudo mv chromedriver /usr/local/bin/
+sudo chmod +x /usr/local/bin/chromedriver
+```
+
+### 3. Verify Chrome and ChromeDriver Installation
 
 You can verify both installations with:
 
 ```bash
 google-chrome --version  # Should return the installed Chrome version
+chromedriver --version   # Should return the installed ChromeDriver version
 ```
 
 Now, your server is ready to run the bot using Selenium with Chrome.
