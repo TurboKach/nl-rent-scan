@@ -79,7 +79,7 @@ To deploy this bot on a remote server using Docker:
    - **Locally**:
 
      ```bash
-     docker run --env-file .env funda_parser_bot
+     docker run -d --env-file .env funda_parser_bot
      ```
 
    - **On a remote server**:
@@ -88,7 +88,7 @@ To deploy this bot on a remote server using Docker:
      3. Run the container using the `.env` file:
 
      ```bash
-     docker run --env-file .env funda_parser_bot
+     docker run -d --env-file .env funda_parser_bot
      ```
 
 ## Setting Up Chrome on a Remote Server
