@@ -152,8 +152,12 @@ class FundaParser:
             street_house=self.extract_element_text(element, "h2[data-test-id='street-name-house-number']"),
             postal_code_city=self.extract_element_text(element, "div[data-test-id='postal-code-city']"),
             price=self.extract_element_text(element, "p[data-test-id='price-rent']"),
-            makelaar_url=self.extract_element_attr(element, "div.mt-4.flex a.text-blue-2", "href"),
-            makelaar_text=self.extract_element_text(element, "div.mt-4.flex a.text-blue-2")
+            makelaar_url=self.extract_element_attr(
+                element, "div.mt-4.flex a.text-secondary-70.min-w-0.cursor-pointer.truncate", "href"
+            ),
+            makelaar_text=self.extract_element_text(
+                element, "div.mt-4.flex a.text-secondary-70.min-w-0.cursor-pointer.truncate"
+            )
         )
 
         self.extract_home_additional_info(home, element)
@@ -163,7 +167,10 @@ class FundaParser:
         """
         Extracts additional information such as size, bedrooms, and energy rating.
         """
-        ul_element = element.find("ul", {"class": "mt-1 flex h-6 min-w-0 flex-wrap overflow-hidden"})
+        ul_element = element.find(
+            "ul",
+            {"class": "mt-1 flex h-6 min-w-0 flex-wrap space-x-3 overflow-hidden sm:space-x-4"}
+        )
         if ul_element:
             li_elements = ul_element.find_all("li")
             for li in li_elements:
