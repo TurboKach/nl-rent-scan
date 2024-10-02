@@ -3,8 +3,8 @@
 set -e  # Exit immediately if a command exits with a non-zero status
 
 # Update package lists and install core packages
-#echo "Updating package lists..."
-#apt-get update
+echo "Updating package lists..."
+apt-get update
 
 # Install basic dependencies
 echo "Installing basic dependencies..."
