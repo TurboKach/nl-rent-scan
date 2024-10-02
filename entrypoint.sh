@@ -39,7 +39,7 @@ wget https://chromedriver.storage.googleapis.com/$(curl -s https://chromedriver.
 
 # Unzip ChromeDriver and force overwrite if it exists
 echo "Unzipping ChromeDriver..."
-unzip -o /tmp/chromedriver.zip -d /usr/local/bin/
+unzip -o chromedriver_linux64.zip -d /usr/local/bin/
 chmod +x /usr/local/bin/chromedriver
 
 # Run the main application
