@@ -37,9 +37,9 @@ apt-get install -y --no-install-recommends google-chrome-stable
 echo "Downloading ChromeDriver..."
 wget https://chromedriver.storage.googleapis.com/$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
 
-# Unzip ChromeDriver
+# Unzip ChromeDriver and force overwrite if it exists
 echo "Unzipping ChromeDriver..."
-unzip chromedriver_linux64.zip -d /usr/local/bin/
+unzip -o /tmp/chromedriver.zip -d /usr/local/bin/
 chmod +x /usr/local/bin/chromedriver
 
 # Run the main application
