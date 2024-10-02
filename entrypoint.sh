@@ -37,9 +37,6 @@ apt-get install -y --no-install-recommends google-chrome-stable
 echo "Downloading ChromeDriver..."
 wget https://chromedriver.storage.googleapis.com/$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
 
-# Move ChromeDriver to /usr/local/bin for global access
-sudo mv chromedriver /usr/local/bin/
-sudo chmod +x /usr/local/bin/chromedriver
 # Unzip ChromeDriver
 echo "Unzipping ChromeDriver..."
 unzip chromedriver_linux64.zip -d /usr/local/bin/
