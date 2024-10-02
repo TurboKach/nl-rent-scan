@@ -35,18 +35,15 @@ apt-get install -y --no-install-recommends google-chrome-stable
 
 # Download ChromeDriver
 echo "Downloading ChromeDriver..."
-CHROME_VERSION=$(google-chrome --version | grep -oP "\d+\.\d+\.\d+")
-CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)
-wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
+wget https://chromedriver.storage.googleapis.com/$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
 
+# Move ChromeDriver to /usr/local/bin for global access
+sudo mv chromedriver /usr/local/bin/
+sudo chmod +x /usr/local/bin/chromedriver
 # Unzip ChromeDriver
 echo "Unzipping ChromeDriver..."
-unzip /tmp/chromedriver.zip -d /usr/local/bin/
+unzip chromedriver_linux64.zip -d /usr/local/bin/
 chmod +x /usr/local/bin/chromedriver
-
-# Cleanup
-echo "Cleaning up..."
-rm -rf /var/lib/apt/lists/* /tmp/chromedriver.zip
 
 # Run the main application
 echo "Starting the application..."
